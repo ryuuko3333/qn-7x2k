@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="速记">
+<meta name="theme-color" content="#44546A">
+<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<title>速记</title>
+<style>
+:root{
+  --bg:#f4f6f9; --card:#fff; --fg:#1f2430; --muted:#7a8699; --line:#dde3ec;
+  --accent:#44546A; --accent-fg:#fff; --warn:#b26a00; --warn-bg:#fff6e0;
+  --danger:#c0392b; --ok:#2e7d52; --chip:#eef1f6;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#13161c; --card:#1c212a; --fg:#e6eaf2; --muted:#8c97a8; --line:#2c3440;
+    --accent:#6b84a8; --accent-fg:#0f1218; --warn:#e0a44a; --warn-bg:#2e2616;
+    --danger:#e06c5c; --ok:#5fbf8e; --chip:#262d38;
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--fg);
+  font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  padding-bottom:calc(76px + env(safe-area-inset-bottom));
+}
+header{
+  position:sticky; top:0; z-index:10; background:var(--accent); color:var(--accent-fg);
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+header h1{margin:0;font-size:17px;font-weight:600;letter-spacing:.5px}
+header .n{font-size:13px;opacity:.85}
+main{padding:14px 14px 0;max-width:720px;margin:0 auto}
+.panel{display:none}.panel.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;font-weight:500}
+label:first-child{margin-top:0}
+label .req{color:var(--danger)}
+input,textarea,select{
+  width:100%; font-size:16px; font-family:inherit; color:var(--fg);
+  background:var(--card); border:1px solid var(--line); border-radius:9px; padding:11px 12px;
+}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent)}
+textarea{min-height:88px;resize:vertical;line-height:1.6}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  padding:9px 14px;border-radius:999px;background:var(--chip);border:1px solid transparent;
+  font-size:14px;cursor:pointer;user-select:none;transition:.12s
+}
+.chip.on{background:var(--accent);color:var(--accent-fg);font-weight:600}
+.chip.sm{padding:7px 12px;font-size:13px}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+.toggle{display:flex;align-items:center;gap:10px;margin-top:14px;cursor:pointer;user-select:none}
+.toggle input{width:auto;flex:none;width:20px;height:20px;accent-color:var(--accent)}
+.toggle span{font-size:14px;color:var(--fg)}
+.hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+.hint.warn{color:var(--warn);background:var(--warn-bg);padding:8px 10px;border-radius:8px;margin-top:8px}
+button{font-family:inherit;font-size:15px;border:none;border-radius:10px;padding:13px 16px;cursor:pointer;font-weight:600}
+.btn{background:var(--accent);color:var(--accent-fg);width:100%}
+.btn2{background:var(--chip);color:var(--fg);width:100%}
+.btn3{background:transparent;color:var(--muted);border:1px solid var(--line);width:100%;font-weight:500}
+.btn-del{background:transparent;color:var(--danger);border:1px solid var(--line);font-size:13px;padding:8px 12px;width:auto;font-weight:500}
+.sp{height:10px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:12px;margin-bottom:9px}
+.item.done{opacity:.5}
+.item .top{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap}
+.badge{font-size:11px;padding:3px 8px;border-radius:5px;background:var(--chip);color:var(--muted);font-weight:600}
+.badge.p{background:var(--warn-bg);color:var(--warn)}
+.item .ol{font-weight:600;font-size:15px;word-break:break-word}
+.item .dt{font-size:13px;color:var(--muted);margin-top:4px;white-space:pre-wrap;word-break:break-word}
+.item .meta{font-size:12px;color:var(--muted);margin-top:7px}
+.item .acts{display:flex;gap:8px;margin-top:10px}
+.empty{text-align:center;color:var(--muted);padding:48px 20px;font-size:14px;line-height:1.8}
+
+/* 清单顶部工具条 */
+.toolbar{display:flex;gap:8px;margin-bottom:12px}
+.toolbar button{flex:1;font-size:13px;padding:11px 8px;background:var(--chip);color:var(--fg);font-weight:500}
+.toolbar button.pri{background:var(--accent);color:var(--accent-fg);font-weight:600}
+.toolbar button:disabled{opacity:.4}
+
+/* 出库模式：条目变成可勾选 */
+.item.pick{padding-left:46px;position:relative;cursor:pointer}
+.item.pick .ck{
+  position:absolute;left:14px;top:13px;width:21px;height:21px;border-radius:6px;
+  border:2px solid var(--line);display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:transparent;transition:.12s
+}
+.item.pick.sel{border-color:var(--accent);background:var(--chip);opacity:1}
+.item.pick.sel .ck{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+
+/* 出库模式底部操作条，顶替 nav */
+#selbar{
+  position:fixed;left:0;right:0;bottom:0;z-index:20;display:none;flex-direction:column;gap:8px;
+  background:var(--card);border-top:1px solid var(--line);
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  box-shadow:0 -4px 14px rgba(0,0,0,.08)
+}
+#selbar.on{display:flex}
+body.picking nav{display:none}
+body.picking{padding-bottom:calc(128px + env(safe-area-inset-bottom))}  /* 操作条比 nav 高，留够 */
+#selbar .r{display:flex;gap:8px;align-items:center}
+#selbar .cnt{flex:1;font-size:13px;color:var(--muted);font-weight:500}
+#selbar button{padding:11px 10px;font-size:14px;width:auto}
+#selbar .wide{flex:2}#selbar .thin{flex:1}
+#selbar .g{background:var(--chip);color:var(--fg);font-weight:500}
+#selbar .d{background:transparent;color:var(--danger);border:1px solid var(--line);font-weight:500}
+pre{
+  background:var(--chip);border-radius:9px;padding:12px;overflow:auto;max-height:230px;
+  font-size:11px;line-height:1.5;margin:0;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  white-space:pre-wrap;word-break:break-all
+}
+nav{
+  position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;
+  background:var(--card);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom)
+}
+nav button{
+  flex:1;background:none;color:var(--muted);border-radius:0;padding:12px 4px;
+  font-size:12px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:3px
+}
+nav button.on{color:var(--accent);font-weight:700}
+nav .ic{font-size:19px;line-height:1}
+nav .dot{
+  display:inline-block;min-width:17px;padding:0 5px;border-radius:9px;background:var(--warn);
+  color:#fff;font-size:10px;line-height:17px;margin-left:4px;font-weight:700
+}
+#toast{
+  position:fixed;left:50%;bottom:92px;transform:translate(-50%,16px);
+  background:var(--fg);color:var(--bg);padding:11px 20px;border-radius:999px;
+  font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.22s;z-index:50;
+  max-width:88vw;text-align:center
+}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+h3{font-size:14px;margin:0 0 10px;font-weight:600}
+h3.sec{margin-top:4px;color:var(--muted);font-size:12px;letter-spacing:.5px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>速记</h1>
+  <span class="n" id="hcount"></span>
+</header>
+
+<main>
+  <!-- ========== 记一条 ========== -->
+  <section class="panel on" id="p-add">
+    <div class="card">
+      <label>类型 <span class="req">*</span></label>
+      <div class="chips" id="types"></div>
+      <div id="form"></div>
+    </div>
+    <button class="btn" id="save">保存</button>
+    <div class="sp"></div>
+    <button class="btn3" id="cancel" style="display:none">取消编辑</button>
+    <div class="sp"></div>
+  </section>
+
+  <!-- ========== 清单 ========== -->
+  <section class="panel" id="p-list">
+    <div class="chips" style="margin-bottom:12px" id="filters"></div>
+    <div class="toolbar">
+      <button id="pickmode">☑ 出库模式</button>
+      <button id="outall" class="pri">⇧ 一键出库</button>
+    </div>
+    <div id="list"></div>
+    <div class="sp"></div>
+  </section>
+
+  <!-- ========== 导出 ========== -->
+  <section class="panel" id="p-out">
+    <div class="card">
+      <h3>导出待处理记录</h3>
+      <p class="hint" style="margin-top:0">
+        点「复制 JSON」，然后粘贴到和 Agent 的对话里，说一句「处理速记」即可。
+      </p>
+      <button class="btn" id="copy">复制 JSON（<span id="pend">0</span> 条待处理）</button>
+      <div class="sp"></div>
+      <div class="row">
+        <button class="btn2" id="dl">下载文件</button>
+        <button class="btn2" id="share">分享</button>
+      </div>
+      <div class="hint warn" id="afterwarn" style="display:none">
+        已复制。<b>等 Agent 真的建好笔记后</b>再出库，否则下次会重复导出。<br>
+        只有一部分入库成功时，去「清单 → 出库模式」挑着出。
+      </div>
+      <div class="sp"></div>
+      <button class="btn3" id="mark">⇧ 一键出库（全部待处理）</button>
+    </div>
+
+    <div class="card">
+      <h3 class="sec">预览</h3>
+      <pre id="prev"></pre>
+    </div>
+
+    <div class="card">
+      <h3 class="sec">备份与恢复</h3>
+      <p class="hint" style="margin-top:0">
+        数据只存在这台手机的浏览器里。清缓存、换手机、无痕模式都会丢。
+        <b>建议每周导出一次全量备份存着。</b>
+      </p>
+      <button class="btn2" id="dlall">导出全部（含已入库）</button>
+      <div class="sp"></div>
+      <label>粘贴 JSON 恢复（按 id 去重，不会覆盖现有记录）</label>
+      <textarea id="imp" placeholder='{"schema":"kb-quicknote/1","items":[...]}'></textarea>
+      <div class="sp"></div>
+      <button class="btn2" id="doimp">导入</button>
+    </div>
+
+    <div class="card">
+      <h3 class="sec">危险操作</h3>
+      <button class="btn3" id="clrdone" style="color:var(--danger)">删除所有已入库记录</button>
+    </div>
+    <div class="sp"></div>
+  </section>
+</main>
+
+<nav>
+  <button class="on" data-tab="add"><span class="ic">✎</span>记一条</button>
+  <button data-tab="list"><span class="ic">☰</span><span>清单<span class="dot" id="ndot" style="display:none">0</span></span></button>
+  <button data-tab="out"><span class="ic">↗</span>导出</button>
+</nav>
+
+<div id="selbar">
+  <div class="r">
+    <span class="cnt" id="selcnt">未选中</span>
+    <button class="g" id="selall">全选</button>
+    <button class="g" id="selexit">退出</button>
+  </div>
+  <div class="r">
+    <button class="wide" id="selout">⇧ 出库</button>
+    <button class="g thin" id="selback">退回</button>
+    <button class="d thin" id="seldel">删除</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+/* ============ 配置：与知识库 AGENTS.md 的 A3 / A4 对齐 ============ */
+
+const TYPES = ['想买的衣服','穿搭灵感','妆面记录','妆容练习','容貌开销','工作问题','想法','面试题','其他'];
+
+// 「一句话」在不同类型下的含义 —— 直接对应笔记标题
+const OL = {
+  '想买的衣服':['单品名','不含品牌，品牌单独填'],
+  '穿搭灵感'  :['一句话结论','如「深色下装配浅色上装显腿长」'],
+  '妆面记录'  :['妆面名','如「8分钟通勤妆」'],
+  '妆容练习'  :['练了什么','如「眼影打底」'],
+  '容貌开销'  :['项目名','如「隐形矫正」「腋下激光」'],
+  '工作问题'  :['问题的一句话描述',''],
+  '想法'      :['主题',''],
+  '面试题'    :['问题本身','如「BT vs FSM 怎么选」'],
+  '其他'      :['一句话','']
+};
+
+// 归类：前缀决定笔记类型，后半截决定字段值
+const CATS = {
+  '想买的衣服':['衣·外套','衣·上装','衣·下装','衣·鞋履','衣·包袋','衣·配饰','衣·绮罗'],
+  '穿搭灵感'  :['技·配色','技·版型与比例','技·场景搭配','技·材质与面料','技·保养与收纳','技·购物策略','技·扬长避短'],
+  '容貌开销'  :['容·整牙','容·发型','容·化妆','容·衣着','容·脱毛'],
+  '妆面记录'  :['妆·通勤','妆·见人面试','妆·拍照','妆·休闲日常','妆·正式场合','妆·练习'],
+  '面试题'    :['题·Gameplay','题·工具','题·通用','题·Lua','题·C++','题·跨语言','题·系统设计']
+};
+
+const SUBS  = ['Pantyhose','Underwear','Leotard','Stocking & Socks']; // 绮罗必填子品类
+const CYCLE = ['一次性','年度','季度','月度'];
+
+// 每种类型显示哪些字段
+const FORM = {
+  '想买的衣服':['cat','brand','model','price','link','detail','photo'],
+  '穿搭灵感'  :['cat','link','detail','photo'],
+  '妆面记录'  :['cat','minutes','detail','photo'],
+  '妆容练习'  :['minutes','detail','photo'],
+  '容貌开销'  :['cat','price','cycle','link','detail'],
+  '工作问题'  :['link','detail'],
+  '想法'      :['detail'],
+  '面试题'    :['cat','link','detail'],
+  '其他'      :['detail','photo']
+};
+
+const DETAIL_PH = {
+  '想买的衣服':'在哪看到的、想要什么颜色尺码、在犹豫什么',
+  '穿搭灵感'  :'怎么看出来的、为什么成立',
+  '妆面记录'  :'用了什么产品、关键手法、哪里容易翻车',
+  '妆容练习'  :'结果怎么样、卡在哪、下次改什么',
+  '容貌开销'  :'哪家、听谁说的、包含什么不包含什么',
+  '工作问题'  :'现象、怎么解决的、根因',
+  '想法'      :'展开说两句',
+  '面试题'    :'你当时怎么答的 / 想到的要点',
+  '其他'      :'随便写'
+};
+
+const LS = 'kb-quicknote-v1';
+const DRAFT = 'kb-quicknote-draft';
+
+/* ============ 状态 ============ */
+
+let items = [];
+let cur = { type:'想买的衣服' };
+let editId = null;
+let copying = false;
+let filter = '待处理';
+let lastExported = [];
+let picking = false;              // 出库模式
+let sel = new Set();              // 出库模式下被勾选的 id
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function load(){
+  try { items = JSON.parse(localStorage.getItem(LS) || '[]'); }
+  catch(e){ items = []; toast('本地数据读取失败'); }
+  if (!Array.isArray(items)) items = [];
+}
+function save(){
+  try { localStorage.setItem(LS, JSON.stringify(items)); }
+  catch(e){ toast('保存失败：存储空间不足'); }
+}
+function saveDraft(){
+  if (editId) return;
+  try { localStorage.setItem(DRAFT, JSON.stringify(cur)); } catch(e){}
+}
+function nowStr(){
+  const d = new Date(), p = n => String(n).padStart(2,'0');
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+let tt;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(tt); tt = setTimeout(()=>t.classList.remove('on'), 2200);
+}
+
+/* ============ 表单 ============ */
+
+function renderTypes(){
+  $('#types').innerHTML = TYPES.map(t =>
+    `<div class="chip${t===cur.type?' on':''}" data-t="${esc(t)}">${esc(t)}</div>`).join('');
+}
+
+function renderForm(){
+  const t = cur.type, fields = FORM[t] || ['detail'];
+  const [lab, hint] = OL[t] || ['一句话',''];
+  let h = '';
+
+  h += `<label>${esc(lab)} <span class="req">*</span></label>`;
+  h += `<input id="f-ol" value="${esc(cur.oneline||'')}" placeholder="${esc(hint)}" enterkeyhint="done">`;
+
+  if (fields.includes('cat') && CATS[t]){
+    h += `<label>归类</label><div class="chips" id="cats">` +
+      CATS[t].map(c => `<div class="chip sm${c===cur.category?' on':''}" data-c="${esc(c)}">${esc(c.split('·')[1])}</div>`).join('') +
+      `</div>`;
+    if (cur.category === '衣·绮罗'){
+      h += `<label>子品类 <span class="req">*</span></label><div class="chips" id="subs">` +
+        SUBS.map(s => `<div class="chip sm${s===cur.sub?' on':''}" data-s="${esc(s)}">${esc(s)}</div>`).join('') +
+        `</div><div class="hint">这项不填的话，Agent 入库时会反过来问你。</div>`;
+    }
+  }
+  if (fields.includes('brand')){
+    h += `<div class="row"><div><label>品牌</label><input id="f-brand" value="${esc(cur.brand||'')}"></div>` +
+         `<div><label>型号 / 色号</label><input id="f-model" value="${esc(cur.model||'')}"></div></div>`;
+  }
+  if (fields.includes('price')){
+    h += `<label>价格</label><input id="f-price" type="number" inputmode="decimal" value="${esc(cur.price||'')}" placeholder="纯数字">`;
+  }
+  if (fields.includes('cycle')){
+    h += `<label>周期 <span class="req">*</span></label><div class="chips" id="cycles">` +
+      CYCLE.map(c => `<div class="chip sm${c===cur.cycle?' on':''}" data-y="${esc(c)}">${esc(c)}</div>`).join('') + `</div>`;
+    if (cur.cycle === '一次性'){
+      h += `<label>摊销年数</label><input id="f-hz" type="number" inputmode="numeric" value="${esc(cur.horizon==null?3:cur.horizon)}">` +
+           `<div class="hint">这笔钱打算按几年来摊。默认 3 年。</div>`;
+    }
+  }
+  if (fields.includes('minutes')){
+    h += `<label>耗时（分钟）</label><input id="f-min" type="number" inputmode="numeric" value="${esc(cur.minutes||'')}">`;
+  }
+  if (fields.includes('link')){
+    h += `<label>链接</label><input id="f-link" type="url" inputmode="url" value="${esc(cur.link||'')}" placeholder="商品页 / 出处">`;
+  }
+  if (fields.includes('detail')){
+    h += `<label>细节</label><textarea id="f-dt" placeholder="${esc(DETAIL_PH[t]||'')}">${esc(cur.detail||'')}</textarea>`;
+  }
+  if (fields.includes('photo')){
+    h += `<label class="toggle"><input type="checkbox" id="f-ph"${cur.photo?' checked':''}><span>拍了照片</span></label>` +
+         `<div class="hint">别往这里塞图。手机相册里给那张照片打个收藏标记，入库时 Agent 会提醒你补图。</div>`;
+  }
+  $('#form').innerHTML = h;
+  bindForm();
+}
+
+function collect(){
+  const g = id => { const e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  cur.oneline = g('f-ol');
+  cur.brand   = g('f-brand');
+  cur.model   = g('f-model');
+  cur.price   = g('f-price');
+  cur.link    = g('f-link');
+  cur.detail  = g('f-dt');
+  cur.minutes = g('f-min');
+  const hz = document.getElementById('f-hz');
+  if (hz) cur.horizon = hz.value.trim();
+  const ph = document.getElementById('f-ph');
+  cur.photo = ph ? ph.checked : false;
+}
+
+function bindForm(){
+  $('#form').oninput = () => { collect(); saveDraft(); };
+  const cats = $('#cats');
+  if (cats) cats.onclick = e => {
+    const c = e.target.closest('[data-c]'); if (!c) return;
+    collect();
+    cur.category = (cur.category === c.dataset.c) ? '' : c.dataset.c;
+    if (cur.category !== '衣·绮罗') cur.sub = '';
+    saveDraft(); renderForm();
+  };
+  const subs = $('#subs');
+  if (subs) subs.onclick = e => {
+    const c = e.target.closest('[data-s]'); if (!c) return;
+    collect(); cur.sub = c.dataset.s; saveDraft(); renderForm();
+  };
+  const cys = $('#cycles');
+  if (cys) cys.onclick = e => {
+    const c = e.target.closest('[data-y]'); if (!c) return;
+    collect(); cur.cycle = c.dataset.y;
+    if (cur.cycle === '一次性' && cur.horizon == null) cur.horizon = 3;
+    saveDraft(); renderForm();
+  };
+}
+
+$('#types').onclick = e => {
+  const c = e.target.closest('[data-t]'); if (!c) return;
+  collect();
+  cur = { type:c.dataset.t, oneline:cur.oneline, detail:cur.detail, photo:cur.photo };
+  saveDraft(); renderTypes(); renderForm();
+};
+
+$('#save').onclick = () => {
+  collect();
+  if (!cur.oneline){ toast('「' + (OL[cur.type]||['一句话'])[0] + '」是必填的'); return; }
+  if (cur.category === '衣·绮罗' && !cur.sub){ toast('绮罗必须选子品类'); return; }
+  if (cur.type === '容貌开销' && !cur.cycle){ toast('容貌开销必须选周期'); return; }
+
+  const rec = {
+    type:cur.type, oneline:cur.oneline, detail:cur.detail||'', category:cur.category||'',
+    sub:cur.sub||'', brand:cur.brand||'', model:cur.model||'',
+    price:cur.price||'', cycle:cur.cycle||'', horizon:cur.horizon||'',
+    minutes:cur.minutes||'', link:cur.link||'', photo:!!cur.photo
+  };
+
+  if (editId){
+    const i = items.findIndex(x => x.id === editId);
+    if (i >= 0) items[i] = Object.assign(items[i], rec);
+    toast('已更新');
+  } else {
+    items.unshift(Object.assign({ id:uid(), created:nowStr(), status:'待处理' }, rec));
+    toast((copying?'已另存为新条目 · ':'已存 · ') + '共 ' + items.filter(x=>x.status==='待处理').length + ' 条待处理');
+  }
+  save();
+  const keep = cur.type;
+  cur = { type:keep };                    // 连续记录同类型时不用重选
+  resetMode();
+  localStorage.removeItem(DRAFT);
+  renderForm(); refresh();
+  window.scrollTo({ top:0, behavior:'smooth' });
+};
+
+// 退出「编辑」或「复制新建」状态，回到普通新增
+function resetMode(){
+  editId = null; copying = false;
+  $('#cancel').style.display = 'none';
+  $('#save').textContent = '保存';
+}
+
+$('#cancel').onclick = () => {
+  cur = { type:cur.type };
+  resetMode();
+  renderTypes(); renderForm(); toast('已取消');
+};
+
+/* ============ 清单 ============ */
+
+const FILTERS = ['待处理','已入库','全部'];
+
+function renderFilters(){
+  $('#filters').innerHTML = FILTERS.map(f => {
+    const n = f==='全部' ? items.length : items.filter(x=>x.status===f).length;
+    return `<div class="chip sm${f===filter?' on':''}" data-f="${esc(f)}">${esc(f)} ${n}</div>`;
+  }).join('');
+}
+
+$('#filters').onclick = e => {
+  const c = e.target.closest('[data-f]'); if (!c) return;
+  filter = c.dataset.f;
+  renderFilters(); renderList();
+  if (picking) renderSelbar();        // 全选/全不选的判断依赖当前筛选
+};
+
+function metaOf(x){
+  const p = [];
+  if (x.category) p.push(x.category + (x.sub ? ' / ' + x.sub : ''));
+  if (x.brand)    p.push(x.brand + (x.model ? ' ' + x.model : ''));
+  if (x.price)    p.push('¥' + x.price + (x.cycle ? ' · ' + x.cycle : ''));
+  if (x.minutes)  p.push(x.minutes + ' 分钟');
+  if (x.photo)    p.push('📷 有照片');
+  if (x.link)     p.push('🔗');
+  return p.join('　·　');
+}
+
+const viewed = () => filter==='全部' ? items : items.filter(x => x.status === filter);
+
+function renderList(){
+  const arr = viewed();
+  if (!arr.length){
+    $('#list').innerHTML = picking
+      ? `<div class="empty">这个筛选下没有条目。</div>`
+      : `<div class="empty">这里还没有东西。<br>去「记一条」写点什么。</div>`;
+    return;
+  }
+  $('#list').innerHTML = arr.map(x => `
+    <div class="item${x.status==='已入库'?' done':''}${picking?' pick':''}${sel.has(x.id)?' sel':''}" data-id="${x.id}">
+      ${picking?`<div class="ck">✓</div>`:''}
+      <div class="top">
+        <span class="badge">${esc(x.type)}</span>
+        ${x.status==='待处理'?'<span class="badge p">待处理</span>':''}
+        <span class="badge" style="background:none">${esc(x.created)}</span>
+      </div>
+      <div class="ol">${esc(x.oneline)}</div>
+      ${x.detail?`<div class="dt">${esc(x.detail)}</div>`:''}
+      ${metaOf(x)?`<div class="meta">${esc(metaOf(x))}</div>`:''}
+      ${picking?'':`
+      <div class="acts">
+        <button class="btn-del" data-ed="${x.id}">编辑</button>
+        <button class="btn-del" data-cp="${x.id}">复制</button>
+        <button class="btn-del" data-rm="${x.id}">删除</button>
+      </div>`}
+    </div>`).join('');
+}
+
+$('#list').onclick = e => {
+  /* 出库模式下，点条目任意位置都是勾选 */
+  if (picking){
+    const row = e.target.closest('[data-id]'); if (!row) return;
+    const id = row.dataset.id;
+    if (sel.has(id)) sel.delete(id); else sel.add(id);
+    row.classList.toggle('sel', sel.has(id));
+    renderSelbar();
+    return;
+  }
+
+  const b = e.target.closest('button'); if (!b) return;
+  const { ed, cp, rm } = b.dataset;
+
+  if (ed){
+    const x = items.find(i => i.id === ed); if (!x) return;
+    cur = Object.assign({}, x);
+    editId = ed; copying = false;
+    $('#cancel').style.display = ''; $('#cancel').textContent = '取消编辑';
+    $('#save').textContent = '保存修改';
+    go('add'); renderTypes(); renderForm();
+    window.scrollTo({ top:0 });
+  }
+
+  if (cp){
+    const x = items.find(i => i.id === cp); if (!x) return;
+    cur = Object.assign({}, x);
+    delete cur.id; delete cur.created; delete cur.status;   // 复制内容，不复制身份
+    editId = null; copying = true;
+    $('#cancel').style.display = ''; $('#cancel').textContent = '放弃这条复制';
+    $('#save').textContent = '保存为新条目';
+    go('add'); renderTypes(); renderForm();
+    window.scrollTo({ top:0 });
+    toast('已复制内容，改完再保存');
+  }
+
+  if (rm){
+    const x = items.find(i => i.id === rm); if (!x) return;
+    if (!confirm('删除这条？\n\n' + x.oneline)) return;
+    items = items.filter(i => i.id !== rm);
+    sel.delete(rm);
+    save(); refresh(); toast('已删除');
+  }
+};
+
+/* ============ 出库 ============ */
+
+// 出库 = 把状态标记为「已入库」，即已经让 Agent 建好笔记、可以从速记里撤下
+function setStatus(ids, st){
+  let n = 0;
+  items.forEach(x => { if (ids.includes(x.id) && x.status !== st){ x.status = st; n++; } });
+  return n;
+}
+
+function renderSelbar(){
+  $('#selbar').classList.toggle('on', picking);
+  document.body.classList.toggle('picking', picking);
+  if (!picking) return;
+  const n = sel.size, arr = viewed();
+  const allOn = arr.length > 0 && arr.every(x => sel.has(x.id));
+  $('#selcnt').textContent = n ? ('已选 ' + n + ' 条') : '点条目勾选';
+  $('#selall').textContent = allOn ? '全不选' : '全选';
+  ['#selout','#selback','#seldel'].forEach(s => {
+    const b = $(s); b.disabled = !n; b.style.opacity = n ? 1 : .4;
+  });
+  $('#selout').textContent  = n ? ('⇧ 出库（' + n + '）') : '⇧ 出库';
+  $('#selback').textContent = '退回';
+  $('#seldel').textContent  = '删除';
+}
+
+function setPicking(on){
+  picking = on;
+  if (!on) sel.clear();
+  $('#pickmode').textContent = on ? '✕ 退出出库模式' : '☑ 出库模式';
+  $('#pickmode').classList.toggle('pri', on);
+  renderSelbar(); renderList();
+}
+
+$('#pickmode').onclick = () => setPicking(!picking);
+$('#selexit').onclick  = () => setPicking(false);
+
+$('#selall').onclick = () => {
+  const arr = viewed();
+  const allOn = arr.length > 0 && arr.every(x => sel.has(x.id));
+  if (allOn) sel.clear(); else arr.forEach(x => sel.add(x.id));
+  renderSelbar(); renderList();
+};
+
+$('#selout').onclick = () => {
+  if (!sel.size) return;
+  const ids = [...sel];
+  const n = setStatus(ids, '已入库');
+  if (!n){ toast('选中的都已经出库了'); return; }
+  save(); sel.clear(); renderSelbar(); refresh();
+  toast('已出库 ' + n + ' 条');
+};
+
+$('#selback').onclick = () => {
+  if (!sel.size) return;
+  const n = setStatus([...sel], '待处理');
+  if (!n){ toast('选中的都是待处理'); return; }
+  save(); sel.clear(); renderSelbar(); refresh();
+  toast('已退回 ' + n + ' 条');
+};
+
+$('#seldel').onclick = () => {
+  if (!sel.size) return;
+  const n = sel.size;
+  if (!confirm('永久删除选中的 ' + n + ' 条？\n\n这个操作不可撤销。')) return;
+  items = items.filter(x => !sel.has(x.id));
+  sel.clear(); save(); renderSelbar(); refresh();
+  toast('已删除 ' + n + ' 条');
+};
+
+// 一键出库：把所有「待处理」一次标记完，不受当前筛选影响
+function outAll(){
+  const pend = items.filter(x => x.status === '待处理');
+  if (!pend.length){ toast('没有待处理的记录'); return; }
+  if (!confirm('把全部 ' + pend.length + ' 条待处理出库？\n\n只有在 Agent 确实建好笔记之后才这么做。')) return;
+  setStatus(pend.map(x => x.id), '已入库');
+  save(); sel.clear();
+  if (picking) renderSelbar();
+  refresh();
+  const w = $('#afterwarn'); if (w) w.style.display = 'none';
+  toast('已出库 ' + pend.length + ' 条');
+}
+$('#outall').onclick = outAll;
+
+/* ============ 导出 ============ */
+
+function clean(x){
+  const o = { id:x.id, created:x.created, type:x.type, oneline:x.oneline };
+  ['detail','category','sub','brand','model','price','cycle','horizon','minutes','link']
+    .forEach(k => { if (x[k] !== '' && x[k] != null) o[k] = x[k]; });
+  if (x.photo) o.photo = true;
+  return o;
+}
+
+function payload(all){
+  const arr = all ? items : items.filter(x => x.status === '待处理');
+  return {
+    schema:'kb-quicknote/1',
+    exported:new Date().toISOString(),
+    count:arr.length,
+    items:arr.map(clean)
+  };
+}
+
+function renderOut(){
+  const p = payload(false);
+  lastExported = p.items.map(i => i.id);
+  $('#pend').textContent = p.count;
+  $('#prev').textContent = p.count ? JSON.stringify(p, null, 1) : '（没有待处理记录）';
+  $('#copy').disabled = !p.count;
+  $('#copy').style.opacity = p.count ? 1 : .45;
+}
+
+async function copyText(s){
+  try {
+    if (navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(s); return true;
+    }
+  } catch(e){}
+  try {                                    // http / 旧浏览器兜底
+    const ta = document.createElement('textarea');
+    ta.value = s;
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select(); ta.setSelectionRange(0, s.length);
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch(e){ return false; }
+}
+
+$('#copy').onclick = async () => {
+  const p = payload(false);
+  if (!p.count){ toast('没有待处理的记录'); return; }
+  const ok = await copyText(JSON.stringify(p, null, 1));
+  if (ok){
+    toast('已复制 ' + p.count + ' 条，去粘给 Agent');
+    $('#afterwarn').style.display = '';
+  } else {
+    toast('复制失败，长按下面预览区手动选');
+  }
+};
+
+function download(obj, name){
+  const blob = new Blob([JSON.stringify(obj, null, 1)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1500);
+}
+const stamp = () => new Date().toISOString().slice(0,10);
+
+$('#dl').onclick    = () => { const p = payload(false); if(!p.count){toast('没有待处理的记录');return;} download(p, '速记-'+stamp()+'.json'); toast('已下载'); };
+$('#dlall').onclick = () => { if(!items.length){toast('还没有记录');return;} download(payload(true), '速记备份-'+stamp()+'.json'); toast('全量备份已下载'); };
+
+$('#share').onclick = async () => {
+  const p = payload(false);
+  if (!p.count){ toast('没有待处理的记录'); return; }
+  const txt = JSON.stringify(p, null, 1);
+  try {
+    const f = new File([txt], '速记-'+stamp()+'.json', { type:'application/json' });
+    if (navigator.canShare && navigator.canShare({ files:[f] })){
+      await navigator.share({ files:[f], title:'速记' }); return;
+    }
+    if (navigator.share){ await navigator.share({ text:txt, title:'速记' }); return; }
+    toast('这个浏览器不支持分享，用复制');
+  } catch(e){ if (e && e.name !== 'AbortError') toast('分享取消'); }
+};
+
+$('#mark').onclick = outAll;      // 与清单页「一键出库」同一个行为
+
+$('#doimp').onclick = () => {
+  const raw = $('#imp').value.trim();
+  if (!raw){ toast('先粘贴 JSON'); return; }
+  let d;
+  try { d = JSON.parse(raw); } catch(e){ toast('JSON 格式不对'); return; }
+  const arr = Array.isArray(d) ? d : (d && Array.isArray(d.items) ? d.items : null);
+  if (!arr){ toast('没找到 items 数组'); return; }
+  const have = new Set(items.map(x => x.id));
+  let n = 0;
+  arr.forEach(x => {
+    if (!x || !x.oneline) return;
+    const id = x.id || uid();
+    if (have.has(id)) return;
+    have.add(id);
+    items.push(Object.assign({
+      id, created:x.created || nowStr(), status:x.status || '待处理',
+      detail:'', category:'', sub:'', brand:'', model:'',
+      price:'', cycle:'', horizon:'', minutes:'', link:'', photo:false
+    }, x, { id }));
+    n++;
+  });
+  items.sort((a,b) => String(b.created).localeCompare(String(a.created)));
+  save(); refresh(); $('#imp').value = '';
+  toast(n ? ('导入 ' + n + ' 条') : '没有新记录（都已存在）');
+};
+
+$('#clrdone').onclick = () => {
+  const n = items.filter(x => x.status === '已入库').length;
+  if (!n){ toast('没有已入库的记录'); return; }
+  if (!confirm('永久删除 ' + n + ' 条已入库记录？\n\n建议先做一次全量备份。')) return;
+  items = items.filter(x => x.status !== '已入库');
+  save(); refresh(); toast('已清理 ' + n + ' 条');
+};
+
+/* ============ 导航 ============ */
+
+function go(tab){
+  if (tab !== 'list' && picking) setPicking(false);   // 操作条是固定定位，离开清单必须收起
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  $('#p-' + tab).classList.add('on');
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  if (tab === 'out') renderOut();
+  if (tab === 'list'){ renderFilters(); renderList(); }
+}
+document.querySelector('nav').onclick = e => {
+  const b = e.target.closest('[data-tab]'); if (b) go(b.dataset.tab);
+};
+
+function refresh(){
+  const live = new Set(items.map(x => x.id));
+  [...sel].forEach(id => { if (!live.has(id)) sel.delete(id); });   // 清掉已删除条目的残留选中
+
+  const n = items.filter(x => x.status === '待处理').length;
+  $('#hcount').textContent = items.length ? (n + ' 待处理 / ' + items.length) : '';
+  const d = $('#ndot');
+  d.style.display = n ? '' : 'none'; d.textContent = n;
+  $('#outall').disabled = !n;
+  $('#outall').style.opacity = n ? 1 : .4;
+  renderFilters(); renderList(); renderOut();
+  if (picking) renderSelbar();
+}
+
+/* ============ 启动 ============ */
+
+load();
+try {
+  const d = JSON.parse(localStorage.getItem(DRAFT) || 'null');
+  if (d && d.type && TYPES.includes(d.type)) cur = d;
+} catch(e){}
+renderTypes(); renderForm(); refresh();
+
+window.addEventListener('beforeunload', () => { collect(); saveDraft(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden){ collect(); saveDraft(); } });
+
+if ('serviceWorker' in navigator && location.protocol === 'https:'){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});   // 没部署 sw.js 也不影响使用
+}
+</script>
+</body>
+</html>

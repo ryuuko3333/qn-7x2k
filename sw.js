@@ -1,6 +1,6 @@
 // 速记 · 离线缓存
 // 改了 index.html 后，把 V 的数字 +1 再部署，否则手机上拿到的还是旧版本。
-const V = 'quicknote-v1';
+const V = 'quicknote-v3';
 const FILES = ['./', './index.html', './manifest.webmanifest'];
 
 self.addEventListener('install', e => {

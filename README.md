@@ -103,11 +103,4 @@
 
 本地预览不要双击 `index.html`（`file://` 下剪贴板 API 和 Service Worker 都不工作）：
 
-```powershell
-cd "C:\Users\mawilechen\Documents\KnowledgeBase\80_AI配置\速记网页"
-py -m http.server 8080
-```
-
-然后开 `http://localhost:8080`。
-
 > ⚠️ 别用 GitHub 网页上传改文件，两边都改会造成分叉。要么全走命令行，要么网页改完先 `git pull`。

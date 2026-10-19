@@ -1,0 +1,20 @@
+{
+  "name": "速记",
+  "short_name": "速记",
+  "description": "随手记录，导出 JSON 给 Agent 入库",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6f9",
+  "theme_color": "#44546A",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%2344546A'/%3E%3Ctext x='256' y='340' font-size='260' font-family='sans-serif' font-weight='bold' fill='%23fff' text-anchor='middle'%3E记%3C/text%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
